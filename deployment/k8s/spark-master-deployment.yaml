@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+  labels:
+    app: spark
+    role: master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark
+      role: master
+  template:
+    metadata:
+      labels:
+        app: spark
+        role: master
+    spec:
+      containers:
+        - name: spark-master
+          image: bitnami/spark:latest
+          ports:
+            - containerPort: 7077  # Spark master port
+            - containerPort: 8080  # Spark master web UI port
+          env:
+            - name: SPARK_MODE
+              value: "master"
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "1"
+          volumeMounts:
+            - name: spark-data
+              mountPath: /opt/spark/data
+      volumes:
+        - name: spark-data
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-master
+  labels:
+    app: spark
+    role: master
+spec:
+  ports:
+    - port: 7077
+      name: spark
+    - port: 8080
+      name: webui
+  selector:
+    app: spark
+    role: master
